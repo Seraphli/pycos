@@ -34,6 +34,7 @@ if platform.system() == 'Windows':
     from errno import WSAEWOULDBLOCK as EWOULDBLOCK
     from errno import WSAEINVAL as EINVAL
     from time import clock as _time
+
     _time()
     if not hasattr(socket, 'IPPROTO_IPV6'):
         socket.IPPROTO_IPV6 = 41
@@ -45,7 +46,6 @@ else:
 
 if sys.version_info >= (3, 3):
     from time import perf_counter as _time
-
 
 __author__ = "Giridhar Pemmasani (pgiri@yahoo.com)"
 __email__ = "pgiri@yahoo.com"
@@ -72,11 +72,12 @@ def serialize(obj):
 
 def deserialize(pkl):
     return pickle.loads(pkl)
+
+
 unserialize = deserialize
 
 
 class Singleton(type):
-
     def __call__(cls, *args, **kwargs):
         if not cls._instance:
             cls._instance = super(Singleton, cls).__call__(*args, **kwargs)
@@ -414,6 +415,7 @@ class _AsyncSocket(object):
 
         Asynchronous version of socket recv method.
         """
+
         def _recv():
             try:
                 buf = self._rsock.recv(bufsize, *args)
@@ -535,6 +537,7 @@ class _AsyncSocket(object):
 
         Asynchronous version of socket recvfrom method.
         """
+
         def _recvfrom():
             try:
                 buf = self._rsock.recvfrom(*args)
@@ -561,6 +564,7 @@ class _AsyncSocket(object):
 
         Asynchronous version of socket send method.
         """
+
         def _send():
             try:
                 sent = self._rsock.send(*args)
@@ -587,6 +591,7 @@ class _AsyncSocket(object):
 
         Asynchronous version of socket sendto method.
         """
+
         def _sendto():
             try:
                 sent = self._rsock.sendto(*args)
@@ -616,6 +621,7 @@ class _AsyncSocket(object):
         length of data sent if any data is sent. If no data has been sent before
         timeout, then it causes 'socket.timeout' exception to be thrown.
         """
+
         def _sendall(self, data_len):
             try:
                 sent = self._rsock.send(self._write_result, *args)
@@ -643,9 +649,9 @@ class _AsyncSocket(object):
                         self._write_fn = self._write_result = None
                         self._notifier.clear(self, _AsyncPoller._Write)
                         self._write_task._proceed_(None)
-                    # elif self._timeout:
-                    #     self._notifier._del_timeout(self)
-                    #     self._notifier._add_timeout(self)
+                        # elif self._timeout:
+                        #     self._notifier._del_timeout(self)
+                        #     self._notifier._add_timeout(self)
 
         self._write_result = memoryview(data)
         if not self._scheduler:
@@ -679,6 +685,7 @@ class _AsyncSocket(object):
         Asynchronous version of socket accept method. Socket in returned pair is
         asynchronous socket (instance of AsyncSocket with blocking=False).
         """
+
         def _accept():
             try:
                 conn, addr = self._rsock.accept()
@@ -723,7 +730,7 @@ class _AsyncSocket(object):
                     conn._rsock.do_handshake()
                 except ssl.SSLError as err:
                     if (err.args[0] == ssl.SSL_ERROR_WANT_READ or
-                       err.args[0] == ssl.SSL_ERROR_WANT_WRITE):
+                                err.args[0] == ssl.SSL_ERROR_WANT_WRITE):
                         pass
                     else:
                         conn._read_fn = conn._write_fn = None
@@ -771,6 +778,7 @@ class _AsyncSocket(object):
 
         Asynchronous version of socket connect method.
         """
+
         def _connect():
             err = self._rsock.getsockopt(socket.SOL_SOCKET, socket.SO_ERROR)
             if err:
@@ -803,7 +811,7 @@ class _AsyncSocket(object):
                     self._rsock.do_handshake()
                 except ssl.SSLError as err:
                     if (err.args[0] == ssl.SSL_ERROR_WANT_READ or
-                       err.args[0] == ssl.SSL_ERROR_WANT_WRITE):
+                                err.args[0] == ssl.SSL_ERROR_WANT_WRITE):
                         pass
                     else:
                         self._read_fn = self._write_fn = None
@@ -1148,6 +1156,7 @@ if platform.system() == 'Windows':
                     srv_sock.close()
                 return (read_sock, write_sock)
 
+
         class _AsyncNotifier(object):
             """Internal use only.
             """
@@ -1222,7 +1231,7 @@ if platform.system() == 'Windows':
                         overlap.object(err, n)
                     elif not self.iocp:
                         if (err == winerror.ERROR_INVALID_HANDLE or
-                            err == winerror.ERROR_ABANDONED_WAIT_0):
+                                    err == winerror.ERROR_ABANDONED_WAIT_0):
                             pass
                         else:
                             logger.warning('IOCP handle closed error: %d', err)
@@ -1284,6 +1293,7 @@ if platform.system() == 'Windows':
                     self.cmd_rsock = self.cmd_wsock = None
                     self.__class__._instance = None
 
+
         class AsyncSocket(_AsyncSocket):
             """AsyncSocket with I/O Completion Ports (under Windows). See
             _AsyncSocket above for more details.  UDP traffic is handled by
@@ -1313,7 +1323,7 @@ if platform.system() == 'Windows':
                     self._notifier.unregister(self)
                     if self._rsock.type & socket.SOCK_STREAM:
                         if ((self._read_overlap and self._read_overlap.object) or
-                           (self._write_overlap and self._write_overlap.object)):
+                                (self._write_overlap and self._write_overlap.object)):
                             def _cleanup_(rc, n):
                                 self._read_overlap.object = self._write_overlap.object = None
                                 self._read_result = self._write_result = None
@@ -1322,6 +1332,7 @@ if platform.system() == 'Windows':
                                 self._notifier = None
                                 # if rc and rc != winerror.ERROR_OPERATION_ABORTED:
                                 #     logger.warning('CancelIo failed?: %x', rc)
+
                             if self._read_overlap and self._read_overlap.object:
                                 self._read_overlap.object = _cleanup_
                             if self._write_overlap and self._write_overlap.object:
@@ -1367,6 +1378,7 @@ if platform.system() == 'Windows':
             def _iocp_recv(self, bufsize, *args):
                 """Internal use only; use 'recv' with 'yield' instead.
                 """
+
                 def _recv(err, n):
                     if self._timeout and self._notifier:
                         self._notifier._del_timeout(self)
@@ -1376,7 +1388,7 @@ if platform.system() == 'Windows':
                             err = winerror.ERROR_CONNECTION_INVALID
                         if self._read_task:
                             if (err == winerror.ERROR_CONNECTION_INVALID or
-                                err == winerror.ERROR_OPERATION_ABORTED):
+                                        err == winerror.ERROR_OPERATION_ABORTED):
                                 self._read_task._proceed_(b'')
                             else:
                                 self._read_task.throw(socket.error(err))
@@ -1402,6 +1414,7 @@ if platform.system() == 'Windows':
             def _iocp_send(self, buf, *args):
                 """Internal use only; use 'send' with 'yield' instead.
                 """
+
                 def _send(err, n):
                     if self._timeout and self._notifier:
                         self._notifier._del_timeout(self)
@@ -1411,7 +1424,7 @@ if platform.system() == 'Windows':
                             err = winerror.ERROR_CONNECTION_INVALID
                         if self._write_task:
                             if (err == winerror.ERROR_CONNECTION_INVALID or
-                                err == winerror.ERROR_OPERATION_ABORTED):
+                                        err == winerror.ERROR_OPERATION_ABORTED):
                                 self._write_task._proceed_(0)
                             else:
                                 self._write_task.throw(socket.error(err))
@@ -1450,7 +1463,7 @@ if platform.system() == 'Windows':
                             err = winerror.ERROR_CONNECTION_INVALID
                         if self._read_task:
                             if (err == winerror.ERROR_CONNECTION_INVALID or
-                                err == winerror.ERROR_OPERATION_ABORTED):
+                                        err == winerror.ERROR_OPERATION_ABORTED):
                                 self._read_task._proceed_(b'')
                             else:
                                 self._read_task.throw(socket.error(err))
@@ -1488,6 +1501,7 @@ if platform.system() == 'Windows':
             def _iocp_sendall(self, data):
                 """Internal use only; use 'sendall' with 'yield' instead.
                 """
+
                 def _sendall(err, n):
                     if err or n == 0:
                         if self._timeout and self._notifier:
@@ -1531,6 +1545,7 @@ if platform.system() == 'Windows':
             def _iocp_connect(self, host_port):
                 """Internal use only; use 'connect' with 'yield' instead.
                 """
+
                 def _connect(err, n):
                     if err:
                         if self._timeout and self._notifier:
@@ -1728,13 +1743,14 @@ if platform.system() == 'Windows':
                 if err != winerror.ERROR_IO_PENDING and err:
                     self._read_overlap.object(err, 0)
 
-
 if not hasattr(sys.modules[__name__], '_AsyncNotifier'):
     import os
+
     try:
         import fcntl
     except ImportError:
         pass
+
 
     class _AsyncPoller(object):
         """Internal use only.
@@ -1993,6 +2009,7 @@ if not hasattr(sys.modules[__name__], '_AsyncNotifier'):
                     srv_sock.close()
                 return (read_sock, write_sock)
 
+
     class _KQueueNotifier(object):
         """Internal use only.
         """
@@ -2042,6 +2059,7 @@ if not hasattr(sys.modules[__name__], '_AsyncNotifier'):
                       for kevent in kevents]
             return events
 
+
     class _SelectNotifier(object):
         """Internal use only.
         """
@@ -2088,6 +2106,7 @@ if not hasattr(sys.modules[__name__], '_AsyncNotifier'):
             self.wset = set()
             self.xset = set()
 
+
     AsyncSocket = _AsyncSocket
     _AsyncNotifier = _AsyncPoller
 
@@ -2095,6 +2114,7 @@ if not hasattr(sys.modules[__name__], '_AsyncNotifier'):
 class Lock(object):
     """'Lock' primitive for tasks.
     """
+
     def __init__(self):
         self._owner = None
         self._waitlist = []
@@ -2141,6 +2161,7 @@ class Lock(object):
 class RLock(object):
     """'RLock' primitive for tasks.
     """
+
     def __init__(self):
         self._owner = None
         self._depth = 0
@@ -2197,6 +2218,7 @@ class RLock(object):
 class Condition(object):
     """'Condition' primitive for tasks.
     """
+
     def __init__(self):
         """TODO: support lock argument?
         """
@@ -2308,6 +2330,7 @@ class Condition(object):
 class Event(object):
     """'Event' primitive for tasks.
     """
+
     def __init__(self):
         self._flag = False
         self._waitlist = []
@@ -2358,6 +2381,7 @@ class Event(object):
 class Semaphore(object):
     """'Semaphore' primitive for tasks.
     """
+
     def __init__(self, value=1):
         assert value >= 1
         self._waitlist = []
@@ -2638,8 +2662,8 @@ class Task(object):
             reply = yield _Peer._sync_reply(request, alarm_value=0)
             if reply is None:
                 reply = -1
-            # if reply < 0:
-            #     logger.warning('remote task at %s may not be valid', self._location)
+                # if reply < 0:
+                #     logger.warning('remote task at %s may not be valid', self._location)
         else:
             reply = self._scheduler._resume(self, message, Pycos._AwaitMsg_)
             if reply == 0:
@@ -2829,7 +2853,7 @@ class Task(object):
         if not inspect.isgeneratorfunction(target):
             raise Exception('%s is not a generator!' % target.__name__)
         if target.__defaults__ and \
-           'task' in target.__code__.co_varnames[:target.__code__.co_argcount][-len(target.__defaults__):]:
+                        'task' in target.__code__.co_varnames[:target.__code__.co_argcount][-len(target.__defaults__):]:
             kwargs['task'] = task
         return target(*args, **kwargs)
 
@@ -3071,14 +3095,14 @@ class Channel(object):
                     subscriber._id = int(subscriber._id)
                     for s in self._subscribers:
                         if (isinstance(s, Task) and s._id == subscriber._id and
-                            s._location == subscriber._location):
+                                    s._location == subscriber._location):
                             subscriber = s
                             break
                 elif isinstance(subscriber, Channel):
                     # remote channel
                     for s in self._subscribers:
                         if (isinstance(s, Channel) and s._name == subscriber._name and
-                            s._location == subscriber._location):
+                                    s._location == subscriber._location):
                             subscriber = s
                             break
             self._subscribers.add(subscriber)
@@ -3110,14 +3134,14 @@ class Channel(object):
                     subscriber._id = int(subscriber._id)
                     for s in self._subscribers:
                         if (isinstance(s, Task) and s._id == subscriber._id and
-                            s._location == subscriber._location):
+                                    s._location == subscriber._location):
                             subscriber = s
                             break
                 elif isinstance(subscriber, Channel):
                     # remote channel
                     for s in self._subscribers:
                         if (isinstance(s, Channel) and s._name == subscriber._name and
-                            s._location == subscriber._location):
+                                    s._location == subscriber._location):
                             subscriber = s
                             break
             try:
@@ -3157,6 +3181,7 @@ class Channel(object):
                 def _unsub(self, subscriber, task=None):
                     logger.debug('remote subscriber %s is not valid; unsubscribing it', subscriber)
                     yield self.unsubscribe(subscriber)
+
                 for subscriber in invalid:
                     Task(_unsub, self, subscriber)
         return 0
@@ -3225,6 +3250,7 @@ class Channel(object):
                 info['pending'] -= 1
                 if info['pending'] == 0:
                     info['done'].set()
+
             for subscriber in subscribers:
                 if isinstance(subscriber, Task) and not subscriber._location:
                     if subscriber.send(message) == 0:
@@ -3243,6 +3269,7 @@ class Channel(object):
                 def _unsub(self, subscriber, task=None):
                     logger.debug('remote subscriber %s is not valid; unsubscribing it', subscriber)
                     yield self.unsubscribe(subscriber)
+
                 for subscriber in info['invalid']:
                     Task(_unsub, self, subscriber)
 
@@ -3744,7 +3771,7 @@ class Pycos(object, metaclass=Singleton):
                     elif exc[0] == HotSwapException:
                         v = exc[1].args
                         if (isinstance(v, tuple) and len(v) == 1 and inspect.isgenerator(v[0]) and
-                            task._hot_swappable and not task._callers):
+                                task._hot_swappable and not task._callers):
                             try:
                                 task._generator.close()
                             except:
