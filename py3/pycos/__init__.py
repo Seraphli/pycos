@@ -891,15 +891,15 @@ class _AsyncSocket(object):
             try:
                 data = yield self.recvall(n)
                 retry = 0
+            except socket.timeout:
+                logger.warning('socket time out, retry %d time(s)' % retry)
+                retry -= 1
             except socket.error as err:
                 if err.args[0] == 'hangup':
                     # raise socket.error(errno.EPIPE, 'Insufficient data')
                     raise StopIteration(b'')
                 else:
                     raise
-            except socket.timeout:
-                logger.warning('socket time out, retry %d time(s)' % retry)
-                retry -= 1
 
         if len(data) != n:
             # raise socket.error(errno.EPIPE, 'Insufficient data: %s / %s' % (len(data), n))
@@ -912,15 +912,15 @@ class _AsyncSocket(object):
                 try:
                     data = yield self.recvall(n)
                     retry = 0
+                except socket.timeout:
+                    logger.warning('socket time out, retry %d time(s)' % retry)
+                    retry -= 1
                 except socket.error as err:
                     if err.args[0] == 'hangup':
                         # raise socket.error(errno.EPIPE, 'Insufficient data')
                         raise StopIteration(b'')
                     else:
                         raise
-                except socket.timeout:
-                    logger.warning('socket time out, retry %d time(s)' % retry)
-                    retry -= 1
 
             if len(data) != n:
                 # raise socket.error(errno.EPIPE, 'Insufficient data: %s / %s' % (len(data), n))
@@ -940,15 +940,15 @@ class _AsyncSocket(object):
             try:
                 data = self._sync_recvall(n)
                 retry = 0
+            except socket.timeout:
+                logger.warning('socket time out, retry %d time(s)' % retry)
+                retry -= 1
             except socket.error as err:
                 if err.args[0] == 'hangup':
                     # raise socket.error(errno.EPIPE, 'Insufficient data')
                     return b''
                 else:
                     raise
-            except socket.timeout:
-                logger.warning('socket time out, retry %d time(s)' % retry)
-                retry -= 1
 
         if len(data) != n:
             # raise socket.error(errno.EPIPE, 'Insufficient data: %s / %s' % (len(data), n))
@@ -961,15 +961,15 @@ class _AsyncSocket(object):
                 try:
                     data = self._sync_recvall(n)
                     retry = 0
+                except socket.timeout:
+                    logger.warning('socket time out, retry %d time(s)' % retry)
+                    retry -= 1
                 except socket.error as err:
                     if err.args[0] == 'hangup':
                         # raise socket.error(errno.EPIPE, 'Insufficient data')
                         return b''
                     else:
                         raise
-                except socket.timeout:
-                    logger.warning('socket time out, retry %d time(s)' % retry)
-                    retry -= 1
 
             if len(data) != n:
                 # raise socket.error(errno.EPIPE, 'Insufficient data: %s / %s' % (len(data), n))
