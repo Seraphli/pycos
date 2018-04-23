@@ -857,14 +857,27 @@ class _AsyncSocket(object):
         Messages are tagged with length of the data, so on the receiving side,
         recv_msg knows how much data to receive.
         """
-        yield self.sendall(struct.pack('>L', len(data)) + data)
+        retry = RETRY_TIMES
+        while retry > 0:
+            try:
+                yield self.sendall(struct.pack('>L', len(data)) + data)
+                retry = 0
+            except BrokenPipeError:
+                logger.warning('socket time out, retry %d time(s)' % retry)
+                retry -= 1
 
     def _sync_send_msg(self, data):
         """Internal use only; use 'send_msg' instead.
 
         Synchronous version of async_send_msg.
         """
-        return self._sync_sendall(struct.pack('>L', len(data)) + data)
+        retry = RETRY_TIMES
+        while retry > 0:
+            try:
+                return self._sync_sendall(struct.pack('>L', len(data)) + data)
+            except BrokenPipeError:
+                logger.warning('socket time out, retry %d time(s)' % retry)
+                retry -= 1
 
     def _async_recv_msg(self):
         """Internal use only; use 'recv_msg' with 'yield' instead.
