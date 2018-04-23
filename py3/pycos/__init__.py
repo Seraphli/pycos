@@ -64,6 +64,7 @@ __all__ = ['Task', 'Pycos', 'Lock', 'RLock', 'Event', 'Condition', 'Semaphore',
 
 # timeout in seconds used when sending messages
 MsgTimeout = 10
+RETRY_TIMES = 5
 
 
 def serialize(obj):
@@ -872,11 +873,11 @@ class _AsyncSocket(object):
         receives length of payload, then the payload and returns the payload.
         """
         n = AsyncSocket._MsgLengthSize
-        retry = True
-        while retry:
+        retry = RETRY_TIMES
+        while retry > 0:
             try:
                 data = yield self.recvall(n)
-                retry = False
+                retry = 0
             except socket.error as err:
                 if err.args[0] == 'hangup':
                     # raise socket.error(errno.EPIPE, 'Insufficient data')
@@ -884,7 +885,8 @@ class _AsyncSocket(object):
                 else:
                     raise
             except socket.timeout:
-                logger.warning('socket time out, retry')
+                logger.warning('socket time out, retry %d time(s)' % retry)
+                retry -= 1
 
         if len(data) != n:
             # raise socket.error(errno.EPIPE, 'Insufficient data: %s / %s' % (len(data), n))
@@ -892,11 +894,11 @@ class _AsyncSocket(object):
         n = struct.unpack('>L', data)[0]
         # assert n >= 0
         if n:
-            retry = True
-            while retry:
+            retry = RETRY_TIMES
+            while retry > 0:
                 try:
                     data = yield self.recvall(n)
-                    retry = False
+                    retry = 0
                 except socket.error as err:
                     if err.args[0] == 'hangup':
                         # raise socket.error(errno.EPIPE, 'Insufficient data')
@@ -904,7 +906,8 @@ class _AsyncSocket(object):
                     else:
                         raise
                 except socket.timeout:
-                    logger.warning('socket time out, retry')
+                    logger.warning('socket time out, retry %d time(s)' % retry)
+                    retry -= 1
 
             if len(data) != n:
                 # raise socket.error(errno.EPIPE, 'Insufficient data: %s / %s' % (len(data), n))
@@ -919,11 +922,11 @@ class _AsyncSocket(object):
         Synchronous version of async_recv_msg.
         """
         n = AsyncSocket._MsgLengthSize
-        retry = True
-        while retry:
+        retry = RETRY_TIMES
+        while retry > 0:
             try:
                 data = self._sync_recvall(n)
-                retry = False
+                retry = 0
             except socket.error as err:
                 if err.args[0] == 'hangup':
                     # raise socket.error(errno.EPIPE, 'Insufficient data')
@@ -931,7 +934,8 @@ class _AsyncSocket(object):
                 else:
                     raise
             except socket.timeout:
-                logger.warning('socket time out, retry')
+                logger.warning('socket time out, retry %d time(s)' % retry)
+                retry -= 1
 
         if len(data) != n:
             # raise socket.error(errno.EPIPE, 'Insufficient data: %s / %s' % (len(data), n))
@@ -939,11 +943,11 @@ class _AsyncSocket(object):
         n = struct.unpack('>L', data)[0]
         # assert n >= 0
         if n:
-            retry = True
-            while retry:
+            retry = RETRY_TIMES
+            while retry > 0:
                 try:
                     data = self._sync_recvall(n)
-                    retry = False
+                    retry = 0
                 except socket.error as err:
                     if err.args[0] == 'hangup':
                         # raise socket.error(errno.EPIPE, 'Insufficient data')
@@ -951,7 +955,8 @@ class _AsyncSocket(object):
                     else:
                         raise
                 except socket.timeout:
-                    logger.warning('socket time out, retry')
+                    logger.warning('socket time out, retry %d time(s)' % retry)
+                    retry -= 1
 
             if len(data) != n:
                 # raise socket.error(errno.EPIPE, 'Insufficient data: %s / %s' % (len(data), n))
