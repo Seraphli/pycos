@@ -64,7 +64,7 @@ __all__ = ['Task', 'Pycos', 'Lock', 'RLock', 'Event', 'Condition', 'Semaphore',
 
 # timeout in seconds used when sending messages
 MsgTimeout = 10
-RETRY_TIMES = 10
+RETRY_TIMES = 3
 
 
 def serialize(obj):
@@ -863,7 +863,8 @@ class _AsyncSocket(object):
                 yield self.sendall(struct.pack('>L', len(data)) + data)
                 retry = 0
             except BrokenPipeError:
-                logger.warning('_async_send_msg socket time out, retry %d time(s)' % retry)
+                logger.error(traceback.format_exc())
+                logger.warning('_async_send_msg BrokenPipeError, retry %d time(s)' % retry)
                 retry -= 1
 
     def _sync_send_msg(self, data):
@@ -876,7 +877,8 @@ class _AsyncSocket(object):
             try:
                 return self._sync_sendall(struct.pack('>L', len(data)) + data)
             except BrokenPipeError:
-                logger.warning('_sync_send_msg socket time out, retry %d time(s)' % retry)
+                logger.error(traceback.format_exc())
+                logger.warning('_sync_send_msg BrokenPipeError, retry %d time(s)' % retry)
                 retry -= 1
 
     def _async_recv_msg(self):
@@ -892,6 +894,7 @@ class _AsyncSocket(object):
                 data = yield self.recvall(n)
                 retry = 0
             except socket.timeout:
+                logger.error(traceback.format_exc())
                 logger.warning('_async_recv_msg socket time out, retry %d time(s)' % retry)
                 retry -= 1
             except socket.error as err:
@@ -913,6 +916,7 @@ class _AsyncSocket(object):
                     data = yield self.recvall(n)
                     retry = 0
                 except socket.timeout:
+                    logger.error(traceback.format_exc())
                     logger.warning('_async_recv_msg socket time out, retry %d time(s)' % retry)
                     retry -= 1
                 except socket.error as err:
@@ -941,6 +945,7 @@ class _AsyncSocket(object):
                 data = self._sync_recvall(n)
                 retry = 0
             except socket.timeout:
+                logger.error(traceback.format_exc())
                 logger.warning('_sync_recv_msg socket time out, retry %d time(s)' % retry)
                 retry -= 1
             except socket.error as err:
@@ -962,6 +967,7 @@ class _AsyncSocket(object):
                     data = self._sync_recvall(n)
                     retry = 0
                 except socket.timeout:
+                    logger.error(traceback.format_exc())
                     logger.warning('_sync_recv_msg socket time out, retry %d time(s)' % retry)
                     retry -= 1
                 except socket.error as err:
